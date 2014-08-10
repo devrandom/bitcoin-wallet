@@ -23,6 +23,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.SecureRandom;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -61,7 +63,9 @@ import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.store.UnreadableWalletException;
 import com.google.bitcoin.store.WalletProtobufSerializer;
 import com.google.bitcoin.utils.Threading;
+import com.google.bitcoin.wallet.DeterministicSeed;
 import com.google.bitcoin.wallet.WalletFiles;
+import com.google.common.base.Splitter;
 
 import de.schildbach.wallet.service.BlockchainService;
 import de.schildbach.wallet.service.BlockchainServiceImpl;
@@ -283,7 +287,15 @@ public class WalletApplication extends Application
 		}
 		else
 		{
-			wallet = new Wallet(Constants.NETWORK_PARAMETERS);
+			long creationTime = System.currentTimeMillis() / 1000;
+			//DeterministicSeed seed = new DeterministicSeed(new SecureRandom(), 128, "", creationTime);
+			final List<String> mnemonic =
+					Splitter.on(" ").splitToList("depend fine ankle route bachelor arena wish warrior fever hunt notice arrive");
+			DeterministicSeed seed = new DeterministicSeed(mnemonic, "",
+					creationTime);
+			log.info("mnemonic phrase is {}", seed.toString());
+			//wallet = new Wallet(Constants.NETWORK_PARAMETERS);
+			wallet = Wallet.fromSeed(Constants.NETWORK_PARAMETERS, seed);
 
 			log.info("new wallet created");
 		}
@@ -338,17 +350,17 @@ public class WalletApplication extends Application
 
 	private void ensureKey()
 	{
-		for (final ECKey key : wallet.getImportedKeys())
-			if (!wallet.isKeyRotating(key))
-				return; // found
-
-		log.info("wallet has no usable key - creating");
-		addNewKeyToWallet();
+//		for (final ECKey key : wallet.getImportedKeys())
+//			if (!wallet.isKeyRotating(key))
+//				return; // found
+//
+//		log.info("wallet has no usable key - creating");
+		wallet.currentReceiveAddress();
 	}
 
 	public void addNewKeyToWallet()
 	{
-		wallet.addKey(new ECKey());
+		wallet.freshReceiveAddress();
 
 		backupWallet();
 
@@ -456,24 +468,25 @@ public class WalletApplication extends Application
 
 	public Address determineSelectedAddress()
 	{
-		final String selectedAddress = config.getSelectedAddress();
-
-		Address firstAddress = null;
-		for (final ECKey key : wallet.getImportedKeys())
-		{
-			if (!wallet.isKeyRotating(key))
-			{
-				final Address address = key.toAddress(Constants.NETWORK_PARAMETERS);
-
-				if (address.toString().equals(selectedAddress))
-					return address;
-
-				if (firstAddress == null)
-					firstAddress = address;
-			}
-		}
-
-		return firstAddress;
+		return wallet.currentReceiveAddress();
+//		final String selectedAddress = config.getSelectedAddress();
+//
+//		Address firstAddress = null;
+//		for (final ECKey key : wallet.getImportedKeys())
+//		{
+//			if (!wallet.isKeyRotating(key))
+//			{
+//				final Address address = key.toAddress(Constants.NETWORK_PARAMETERS);
+//
+//				if (address.toString().equals(selectedAddress))
+//					return address;
+//
+//				if (firstAddress == null)
+//					firstAddress = address;
+//			}
+//		}
+//
+//		return firstAddress;
 	}
 
 	public void startBlockchainService(final boolean cancelCoinsReceived)

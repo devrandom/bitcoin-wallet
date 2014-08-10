@@ -158,7 +158,7 @@ public final class RequestCoinsFragment extends SherlockFragment
 		}
 		else
 		{
-			address = wallet.freshReceiveKey().toAddress(Constants.NETWORK_PARAMETERS);
+			address = wallet.freshReceiveAddress();
 		}
 	}
 
