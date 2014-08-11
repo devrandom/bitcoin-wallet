@@ -66,6 +66,7 @@ import com.google.bitcoin.wallet.WalletFiles;
 
 import de.schildbach.wallet.service.BlockchainService;
 import de.schildbach.wallet.service.BlockchainServiceImpl;
+import de.schildbach.wallet.signers.MultisigTransactionSigner;
 import de.schildbach.wallet.util.CrashReporter;
 import de.schildbach.wallet.util.Io;
 import de.schildbach.wallet.util.LinuxSecureRandom;
@@ -139,6 +140,9 @@ public class WalletApplication extends Application
 
 	private void afterLoadWallet()
 	{
+		if (wallet.getTransactionSigners().size() == 1)
+			wallet.addTransactionSigner(new MultisigTransactionSigner());
+		
 		wallet.autosaveToFile(walletFile, 1, TimeUnit.SECONDS, new WalletAutosaveEventListener());
 
 		// clean up spam
