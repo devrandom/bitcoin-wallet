@@ -79,8 +79,10 @@ import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.VerificationException;
 import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.core.Wallet.BalanceType;
+import com.google.bitcoin.crypto.DeterministicKey;
 import com.google.bitcoin.store.UnreadableWalletException;
 import com.google.bitcoin.store.WalletProtobufSerializer;
+import com.google.common.collect.Lists;
 
 import de.schildbach.wallet.Configuration;
 import de.schildbach.wallet.Constants;
@@ -302,9 +304,21 @@ public final class WalletActivity extends AbstractWalletActivity
 			case R.id.wallet_options_help:
 				HelpDialogFragment.page(getSupportFragmentManager(), R.string.help_wallet);
 				return true;
+				
+			case R.id.wallet_options_marry:
+				handleMarry();
+				return true;
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void handleMarry() {
+		List<DeterministicKey> followingAccountKeys = Lists.newArrayList();
+		wallet.createAndActivateNewHDChain(); // FIXME race condition between this statement and next
+		log.info("New chain mnemonic {}", wallet.getKeyChainSeed());
+		followingAccountKeys.add(wallet.getWatchingKey());
+		wallet.addFollowingAccountKeys(followingAccountKeys);
 	}
 
 	public void handleRequestCoins()

@@ -866,7 +866,7 @@ public final class SendCoinsFragment extends SherlockFragment
 
 				sentTransaction.getConfidence().addEventListener(sentTransactionConfidenceListener);
 
-				final Address refundAddress = wallet.freshReceiveKey().toAddress(Constants.NETWORK_PARAMETERS);
+				final Address refundAddress = wallet.freshReceiveAddress();
 				final Payment payment = PaymentProtocol.createPaymentMessage(Arrays.asList(new Transaction[] { sentTransaction }), finalAmount,
 						refundAddress, null, paymentIntent.payeeData);
 
