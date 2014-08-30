@@ -180,7 +180,13 @@
 			android:screenOrientation="behind"
 			android:theme="@style/My.Theme.ChildActivity"
 			android:windowSoftInputMode="adjustResize" />
-
+		<activity
+			android:name="de.schildbach.wallet.ui.MarryActivity"
+			android:configChanges="keyboard|keyboardHidden"
+			android:label="Marry Activity"
+			android:screenOrientation="behind"
+			android:windowSoftInputMode="adjustResize" />
+		
 		<provider
 			android:name="de.schildbach.wallet.AddressBookProvider"
 			android:authorities="de.schildbach.wallet_test.address_book"

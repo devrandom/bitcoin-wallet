@@ -23,6 +23,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
@@ -60,9 +62,23 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+
+import com.google.bitcoin.core.ECKey;
+import com.google.bitcoin.core.Sha256Hash;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.VerificationException;
+import com.google.bitcoin.core.VersionMessage;
+import com.google.bitcoin.core.Wallet;
+import com.google.bitcoin.crypto.ChildNumber;
+import com.google.bitcoin.crypto.MnemonicCode;
+import com.google.bitcoin.signers.CustomTransactionSigner;
+import com.google.bitcoin.store.UnreadableWalletException;
+import com.google.bitcoin.store.WalletProtobufSerializer;
+import com.google.bitcoin.utils.Threading;
+import com.google.bitcoin.wallet.WalletFiles;
+
 import de.schildbach.wallet.service.BlockchainService;
 import de.schildbach.wallet.service.BlockchainServiceImpl;
-import de.schildbach.wallet.signers.MultisigTransactionSigner;
 import de.schildbach.wallet.util.CrashReporter;
 import de.schildbach.wallet.util.Io;
 import de.schildbach.wallet.util.LinuxSecureRandom;
@@ -149,9 +165,14 @@ public class WalletApplication extends Application
 	private void afterLoadWallet()
 	{
 		if (wallet.getTransactionSigners().size() == 1)
-			wallet.addTransactionSigner(new MultisigTransactionSigner());
-		wallet.autosaveToFile(walletFile, 10, TimeUnit.SECONDS, new WalletAutosaveEventListener());
-		
+			wallet.addTransactionSigner(new CustomTransactionSigner() {
+				@Override
+				protected SignatureAndKey getSignature(Sha256Hash sighash, List<ChildNumber> derivationPath) {
+					return null;
+				}
+			});
+        wallet.autosaveToFile(walletFile, 10, TimeUnit.SECONDS, new WalletAutosaveEventListener());
+
 
 		// clean up spam
 		wallet.cleanup();

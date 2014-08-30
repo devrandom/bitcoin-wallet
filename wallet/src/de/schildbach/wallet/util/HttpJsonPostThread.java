@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,30 +19,34 @@ package de.schildbach.wallet.util;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.content.res.AssetManager;
-
-import com.google.common.base.Charsets;
-
 import de.schildbach.wallet.Constants;
 
 /**
  * @author Andreas Schildbach
  */
-public abstract class HttpGetThread extends HttpThread
+public abstract class HttpJsonPostThread extends HttpThread
 {
-	private static final Logger log = LoggerFactory.getLogger(HttpGetThread.class);
+	private static final Logger log = LoggerFactory.getLogger(HttpJsonPostThread.class);
+	private JSONObject body;
 
-	public HttpGetThread(@Nonnull final AssetManager assets, @Nonnull final String url, @Nullable final String userAgent)
+	public HttpJsonPostThread(@Nonnull final JSONObject body,
+			@Nonnull final String url,
+			@Nullable final String userAgent)
 	{
-		super(assets, url, userAgent);
+		super(null, url, userAgent);
+		this.body = body;
 	}
 
 	@Override
@@ -50,35 +54,37 @@ public abstract class HttpGetThread extends HttpThread
 	{
 		HttpURLConnection connection = null;
 
-		log.debug("querying \"" + url + "\"...");
+		log.debug("posting \"" + url + "\"...");
 
 		try
 		{
 			connection = getConnection();
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setDoOutput(true);
 			connection.connect();
+			OutputStream os = connection.getOutputStream();
+			os.write(body.toString(2).getBytes());
+			os.close();
 
 			if (connection.getResponseCode() == HttpURLConnection.HTTP_OK)
 			{
-				final long serverTime = connection.getDate();
-				// TODO parse connection.getContentType() for charset
-
-				final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8), 64);
-				final String line = reader.readLine().trim();
-				reader.close();
-
-				handleLine(line, serverTime);
+				BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"), 64);
+				StringBuilder content = new StringBuilder();
+				Io.copy(reader, content);
+				JSONTokener tokener = new JSONTokener(content.toString());
+				Object head = tokener.nextValue();
+				handleResponse(head);
+			} else {
+				handleException(new RuntimeException("Got response " + connection.getResponseMessage()));
 			}
 		}
-		catch (final Exception x)
-		{
+		catch (final Exception x) {
 			handleException(x);
-		}
-		finally
-		{
+		} finally {
 			if (connection != null)
 				connection.disconnect();
 		}
 	}
 
-	protected abstract void handleLine(@Nonnull String line, long serverTime);
+	protected abstract void handleResponse(Object head);
 }
