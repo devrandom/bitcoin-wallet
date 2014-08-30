@@ -326,19 +326,11 @@ public final class WalletActivity extends AbstractWalletActivity
 				return true;
 				
 			case R.id.wallet_options_marry:
-				handleMarry();
+				startActivity(new Intent(this, MarryActivity.class));
 				return true;
 		}
 
 		return super.onOptionsItemSelected(item);
-	}
-
-	private void handleMarry() {
-		List<DeterministicKey> followingAccountKeys = Lists.newArrayList();
-		wallet.createAndActivateNewHDChain(); // FIXME race condition between this statement and next
-		log.info("New chain mnemonic {}", wallet.getKeyChainSeed());
-		followingAccountKeys.add(wallet.getWatchingKey());
-		wallet.addFollowingAccountKeys(followingAccountKeys);
 	}
 
 	public void handleRequestCoins()
