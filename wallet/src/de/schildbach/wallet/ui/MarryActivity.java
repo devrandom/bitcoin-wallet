@@ -1,5 +1,7 @@
 package de.schildbach.wallet.ui;
 
+import co.cryptocorp.oracle.api.CryptocorpTransactionSigner;
+
 import io.socket.IOAcknowledge;
 import io.socket.IOCallback;
 import io.socket.SocketIO;
@@ -28,7 +30,6 @@ import android.content.Context;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Debug;
 import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,6 +38,7 @@ import android.widget.TextView;
 import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.crypto.DeterministicKey;
 import com.google.bitcoin.wallet.DeterministicKeyChain;
+import com.google.bitcoin.wallet.KeyChain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -55,6 +57,7 @@ public class MarryActivity extends AbstractWalletActivity {
 	private SocketIO socket;
 
 	private DeterministicKeyChain keychain;
+	private String channelId;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState)
@@ -67,8 +70,16 @@ public class MarryActivity extends AbstractWalletActivity {
 		setContentView(R.layout.marry_content);
 		textView = (TextView)findViewById(R.id.marry_text);
 		textView.setMovementMethod(new ScrollingMovementMethod());
+		keychain = null;
+
+		handleScan();
 	}
-	
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+	}
+
 	@Override
 	protected void onDestroy() {
 		if (socket != null) {
@@ -78,9 +89,12 @@ public class MarryActivity extends AbstractWalletActivity {
 		super.onDestroy();
 	}
 
-	private void handleMarry(List<String> keyStrings) {
+	private void handleMarry(URL rendezvousUrl, List<String> keyStrings, String leadKey) {
+		wallet.setKeychainLookaheadSize(10); // for now
+
 		List<DeterministicKey> followingAccountKeys = Lists.newArrayList();
 		String myKey = keychain.getWatchingKey().serializePubB58();
+		List<String> accountKeys = Lists.newArrayList(leadKey, myKey);
 
 		for (String keyString : keyStrings) {
 			if (!myKey.equals(keyString)) {
@@ -88,10 +102,16 @@ public class MarryActivity extends AbstractWalletActivity {
 				followingAccountKeys.add(DeterministicKey.deserializeB58(keyString));
 			}
 		}
-		
+
+		wallet.addTransactionSigner(new CryptocorpTransactionSigner(rendezvousUrl, channelId, myKey, accountKeys));
+
 		wallet.addAndActivateHDChain(keychain);
+		// FIXME race condition here - need to lock wallet
 		log.info("New chain mnemonic {}", wallet.getKeyChainSeed());
 		wallet.addFollowingAccountKeys(followingAccountKeys);
+		wallet.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+		wallet.freshAddress(KeyChain.KeyPurpose.CHANGE);
+		finish();
 	}
 	
 	@Override
@@ -222,7 +242,7 @@ public class MarryActivity extends AbstractWalletActivity {
 
 	private void listenToRendezvous(final URL url) {
 		String[] pathEl = url.getPath().split("/");
-		final String channelId = pathEl[pathEl.length - 1];
+		channelId = pathEl[pathEl.length - 1];
 		URL base;
 		try {
 			SocketIO.setDefaultSSLSocketFactory(SSLContext.getDefault());
@@ -278,6 +298,8 @@ public class MarryActivity extends AbstractWalletActivity {
 						JSONObject keysJson = (JSONObject)args[0];
 						Iterator<String> iter = keysJson.keys();
 						final List<String> keyStrings = Lists.newArrayList();
+						String foundLeadKey = null;
+
 						boolean isComplete = false;
 						while (iter.hasNext()) {
 							String key = iter.next();
@@ -288,8 +310,12 @@ public class MarryActivity extends AbstractWalletActivity {
 							keyStrings.add(key);
 							if ("risk".equals(role)) {
 								isComplete = true;
+							} else if ("lead".equals(role)) {
+								foundLeadKey = key;
 							}
 						}
+
+						final String leadKeyString = foundLeadKey;
 						
 						if (isComplete) {
 							appendMessage("complete!");
@@ -297,7 +323,7 @@ public class MarryActivity extends AbstractWalletActivity {
 								@Override
 								public void run() {
 									socket.disconnect();
-									handleMarry(keyStrings);
+									handleMarry(url, keyStrings, leadKeyString);
 								}
 							});
 						}

@@ -142,14 +142,6 @@ public class WalletApplication extends Application
 
 	private void afterLoadWallet()
 	{
-		if (wallet.getTransactionSigners().size() == 1)
-			wallet.addTransactionSigner(new CustomTransactionSigner() {
-				@Override
-				protected SignatureAndKey getSignature(Sha256Hash sighash, List<ChildNumber> derivationPath) {
-					return null;
-				}
-			});
-		
 		wallet.autosaveToFile(walletFile, 1, TimeUnit.SECONDS, new WalletAutosaveEventListener());
 
 		// clean up spam
