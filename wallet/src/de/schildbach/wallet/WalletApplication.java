@@ -171,8 +171,7 @@ public class WalletApplication extends Application
 					return null;
 				}
 			});
-        wallet.autosaveToFile(walletFile, 10, TimeUnit.SECONDS, new WalletAutosaveEventListener());
-
+		wallet.autosaveToFile(walletFile, 1, TimeUnit.SECONDS, new WalletAutosaveEventListener());
 
 		// clean up spam
 		wallet.cleanup();
