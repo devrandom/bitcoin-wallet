@@ -105,10 +105,8 @@ public class MarryActivity extends AbstractWalletActivity {
 
 		wallet.addTransactionSigner(new CryptocorpTransactionSigner(rendezvousUrl, channelId, myKey, accountKeys));
 
-		wallet.addAndActivateHDChain(keychain);
-		// FIXME race condition here - need to lock wallet
+		wallet.addAndActivateMarriedHDChain(keychain, followingAccountKeys);
 		log.info("New chain mnemonic {}", wallet.getKeyChainSeed());
-		wallet.addFollowingAccountKeys(followingAccountKeys);
 		wallet.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
 		wallet.freshAddress(KeyChain.KeyPurpose.CHANGE);
 		finish();
