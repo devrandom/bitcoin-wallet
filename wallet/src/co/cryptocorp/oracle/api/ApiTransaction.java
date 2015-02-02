@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.bitcoin.core.AddressFormatException;
-import com.google.bitcoin.crypto.DeterministicKey;
 import com.google.common.collect.Lists;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.List;
 

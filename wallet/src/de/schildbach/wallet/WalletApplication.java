@@ -29,11 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.VerificationException;
-import org.bitcoinj.core.VersionMessage;
-import org.bitcoinj.core.Wallet;
+import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.MnemonicCode;
+import org.bitcoinj.signers.CustomTransactionSigner;
 import org.bitcoinj.store.UnreadableWalletException;
 import org.bitcoinj.store.WalletProtobufSerializer;
 import org.bitcoinj.utils.Threading;
@@ -62,20 +61,6 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
-
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Sha256Hash;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.VerificationException;
-import com.google.bitcoin.core.VersionMessage;
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.crypto.ChildNumber;
-import com.google.bitcoin.crypto.MnemonicCode;
-import com.google.bitcoin.signers.CustomTransactionSigner;
-import com.google.bitcoin.store.UnreadableWalletException;
-import com.google.bitcoin.store.WalletProtobufSerializer;
-import com.google.bitcoin.utils.Threading;
-import com.google.bitcoin.wallet.WalletFiles;
 
 import de.schildbach.wallet.service.BlockchainService;
 import de.schildbach.wallet.service.BlockchainServiceImpl;

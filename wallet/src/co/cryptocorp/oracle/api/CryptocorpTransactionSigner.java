@@ -4,23 +4,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.bitcoin.core.AddressFormatException;
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.core.Transaction;
-import com.google.bitcoin.core.TransactionInput;
-import com.google.bitcoin.core.TransactionOutput;
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.crypto.ChildNumber;
-import com.google.bitcoin.crypto.DeterministicKey;
-import com.google.bitcoin.script.Script;
-import com.google.bitcoin.signers.CustomTransactionSigner;
-import com.google.bitcoin.signers.TransactionSigner;
-import com.google.bitcoin.wallet.KeyBag;
-import com.google.bitcoin.wallet.RedeemData;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.ChildNumber;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.signers.CustomTransactionSigner;
+import org.bitcoinj.signers.TransactionSigner;
+import org.bitcoinj.wallet.KeyBag;
+import org.bitcoinj.wallet.RedeemData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +122,7 @@ public class CryptocorpTransactionSigner implements TransactionSigner {
 			TransactionOutput txOut = txIn.getConnectedOutput();
 			if (txOut == null) {
 				throw new RuntimeException("Missing input transaction");
-			}
+ 			}
 
 			inputTransactions.add(txOut.getParentTransaction().bitcoinSerialize());
 

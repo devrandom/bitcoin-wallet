@@ -3,7 +3,7 @@
 
 	<item
 		android:id="@+id/marry_scan"
-		android:icon="@drawable/ic_action_camera"
+		android:icon="@drawable/ic_arrow_back_white_24dp"
 		android:showAsAction="always|withText"
 		android:title="Scan Link"/>
 

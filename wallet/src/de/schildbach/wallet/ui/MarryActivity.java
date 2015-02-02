@@ -22,6 +22,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLContext;
 
+import org.bitcoinj.core.Wallet;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.wallet.DeterministicKeyChain;
+import org.bitcoinj.wallet.KeyChain;
+import org.bitcoinj.wallet.MarriedKeyChain;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,10 +40,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.google.bitcoin.core.Wallet;
-import com.google.bitcoin.crypto.DeterministicKey;
-import com.google.bitcoin.wallet.DeterministicKeyChain;
-import com.google.bitcoin.wallet.KeyChain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -93,19 +94,20 @@ public class MarryActivity extends AbstractWalletActivity {
 		wallet.setKeychainLookaheadSize(10); // for now
 
 		List<DeterministicKey> followingAccountKeys = Lists.newArrayList();
-		String myKey = keychain.getWatchingKey().serializePubB58();
+		String myKey = keychain.getWatchingKey().serializePubB58(wallet.getNetworkParameters());
 		List<String> accountKeys = Lists.newArrayList(leadKey, myKey);
 
 		for (String keyString : keyStrings) {
 			if (!myKey.equals(keyString)) {
 				log.info("Adding key {}", keyString);
-				followingAccountKeys.add(DeterministicKey.deserializeB58(keyString));
+				followingAccountKeys.add(DeterministicKey.deserializeB58(keyString, wallet.getNetworkParameters()));
 			}
 		}
 
 		wallet.addTransactionSigner(new CryptocorpTransactionSigner(rendezvousUrl, channelId, myKey, accountKeys));
 
-		wallet.addAndActivateMarriedHDChain(keychain, followingAccountKeys);
+        MarriedKeyChain marriedChain = MarriedKeyChain.builder().seed(keychain.getSeed()).followingKeys(followingAccountKeys).build();
+		wallet.addAndActivateHDChain(marriedChain);
 		log.info("New chain mnemonic {}", wallet.getKeyChainSeed());
 		wallet.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
 		wallet.freshAddress(KeyChain.KeyPurpose.CHANGE);
@@ -202,7 +204,7 @@ public class MarryActivity extends AbstractWalletActivity {
 		JSONObject req = new JSONObject();
 		try {
 			req.put("walletAgent", application.httpUserAgent());
-			req.put("key", myKey.serializePubB58());
+			req.put("key", myKey.serializePubB58(wallet.getNetworkParameters()));
 			JSONObject attributes = new JSONObject();
 			attributes.put("role", "mobile");
 			req.put("attributes", attributes);

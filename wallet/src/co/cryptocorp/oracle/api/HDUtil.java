@@ -1,12 +1,12 @@
 package co.cryptocorp.oracle.api;
 
-import com.google.bitcoin.core.AddressFormatException;
-import com.google.bitcoin.core.Base58;
-import com.google.bitcoin.core.ECKey;
-import com.google.bitcoin.crypto.ChildNumber;
-import com.google.bitcoin.crypto.DeterministicKey;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Base58;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.crypto.ChildNumber;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import java.math.BigInteger;
 import java.util.Arrays;
