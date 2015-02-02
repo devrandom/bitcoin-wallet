@@ -100,7 +100,11 @@ public class MarryActivity extends AbstractWalletActivity {
 		for (String keyString : keyStrings) {
 			if (!myKey.equals(keyString)) {
 				log.info("Adding key {}", keyString);
-				followingAccountKeys.add(DeterministicKey.deserializeB58(keyString, wallet.getNetworkParameters()));
+                DeterministicKey providedKey = DeterministicKey.deserializeB58(keyString, wallet.getNetworkParameters());
+                // Fake the path to satisfy check in DKC/MKC
+                DeterministicKey adjustedKey =
+                        new DeterministicKey(DeterministicKeyChain.BIP44_ACCOUNT_PATH, providedKey.getChainCode(), providedKey.getPubKeyPoint(), null, null);
+                followingAccountKeys.add(adjustedKey);
 			}
 		}
 
